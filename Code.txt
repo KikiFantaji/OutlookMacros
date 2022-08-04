@@ -1,0 +1,50 @@
+Private WithEvents Items As Outlook.Items
+
+Private Sub Application_Startup()
+    Dim olApp As Outlook.Application
+    Dim objNS As Outlook.NameSpace
+    Set olApp = Outlook.Application
+    Set objNS = olApp.GetNamespace("MAPI")
+    Set olFol = objNS.GetDefaultFolder(olFolderInbox)
+    Dim fld As Folder
+    Set fld = Application.GetNamespace("MAPI").Folders(olFol.Parent.Name).Folders("SD")
+    Set Items = fld.Items
+End Sub
+
+Private Sub Items_ItemAdd(ByVal Item As Object)
+    On Error GoTo ErrorHandler
+    Dim Msg As Outlook.MailItem
+    If TypeName(Item) = "MailItem" Then
+        Set Msg = Item
+        ' MsgBox ("InWork SC-" + Mid(Item.Subject, InStr(1, Item.Subject, "-", 1) + 1, 7))
+        
+        ' Ãåíåðàöèÿ ÷èñëà îò 30 äî 60
+        Dim MyValue As Integer
+        MyValue = Rnd * (60 - 30) + 30
+        
+        ' Òàéìåð
+        Dim PauseTime, Start
+        PauseTime = MyValue
+        Start = Timer    ' Âðåìÿ ñòàðòà òàéìåðà
+        Do While Timer < Start + PauseTime
+        DoEvents
+        Loop
+    
+        ' Ñîçäàíèå è îòïðàâêà ïèñüìà
+        Dim MyEmail As MailItem
+        Set MyEmail = Application.CreateItem(olMailItem)
+        With MyEmail
+                    .To = "support@tplusgroup.ru"
+                    .Importance = Item.Importance
+                    .Subject = "InWork SC-" + Mid(Item.Subject, InStr(1, Item.Subject, "-", 1) + 1, 7)
+                    .Body = ""
+                    .BodyFormat = olFormatHTML
+                    .Send
+        End With
+    End If
+ProgramExit:
+Exit Sub
+ErrorHandler:
+  MsgBox Err.Number & " - " & Err.Description
+  Resume ProgramExit
+End Sub
